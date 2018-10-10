@@ -64,9 +64,9 @@ module Mongoid
         fixture_sets = files_to_read.map do |fs_name|
           klass = class_names[fs_name]
           fixtures_map[fs_name] = Mongoid::FixtureSet.new(
-                                      fs_name,
-                                      klass,
-                                      ::File.join(fixtures_directory, fs_name))
+              fs_name,
+              klass,
+              ::File.join(fixtures_directory, fs_name))
         end
 
         update_all_loaded_fixtures fixtures_map
@@ -112,23 +112,23 @@ module Mongoid
 
       def sanitize_new_embedded_documents(document, is_new = false)
         document.relations.each do |name, relation|
-          case relation.macro
-          when :embeds_one
+          case relation
+          when Mongoid::Association::Embedded::EmbedsOne
             if (document.changes[name] && !document.changes[name][1].nil?) ||
-              (is_new && document[name])
+                (is_new && document[name])
 
               embedded_document_set_default_values(document.public_send(relation.name), document[name])
             end
-          when :embeds_many
+          when Mongoid::Association::Embedded::EmbedsMany
             if (document.changes[name] && !document.changes[name][1].nil?) ||
-              (is_new && document[name])
+                (is_new && document[name])
 
               embeddeds = document.public_send(relation.name)
               embeddeds.each_with_index do |embedded, i|
                 embedded_document_set_default_values(embedded, document[name][i])
               end
             end
-          when :belongs_to
+          when Mongoid::Association::Referenced::BelongsTo
             if is_new && document.attributes[name]
               value = document.attributes.delete(name)
               if value.is_a?(Hash)
@@ -178,8 +178,8 @@ module Mongoid
       end
 
       @class_name = @model_class.respond_to?(:name) ?
-        @model_class.name :
-        self.class.default_fixture_model_name(name)
+                        @model_class.name :
+                        self.class.default_fixture_model_name(name)
 
       @fixtures = read_fixture_files
     end
@@ -230,12 +230,12 @@ module Mongoid
       set_attributes_timestamps(model_class, attributes)
 
       model_class.relations.each_value do |relation|
-        case relation.macro
-        when :belongs_to
+        case relation
+        when Mongoid::Association::Referenced::BelongsTo
           unmarshall_belongs_to(model_class, attributes, relation)
-        when :has_many
+        when Mongoid::Association::Referenced::HasMany
           unmarshall_has_many(model_class, attributes, relation)
-        when :has_and_belongs_to_many
+        when Mongoid::Association::Referenced::HasAndBelongsToMany
           unmarshall_has_and_belongs_to_many(model_class, attributes, relation)
         end
       end
@@ -288,12 +288,12 @@ module Mongoid
         document = self.class.find_or_create_document(relation.class_name, value)
         if relation.polymorphic?
           self.class.update_document(document, {
-            relation.foreign_key => attributes['_id'],
-            relation.type        => model_class.name,
+              relation.foreign_key => attributes['_id'],
+              relation.type        => model_class.name,
           })
         else
           self.class.update_document(document, {
-            relation.foreign_key => attributes['_id']
+              relation.foreign_key => attributes['_id']
           })
         end
       end
@@ -320,9 +320,7 @@ module Mongoid
         document = self.class.find_or_create_document(relation.class_name, value)
         attributes[key] << document.id
 
-        self.class.update_document(document, {
-          relation.inverse_foreign_key => Array(attributes['_id'])
-        })
+        self.class.update_document(document, relation.inverse_foreign_key => Array(attributes['_id']))
       end
     end
 
@@ -357,4 +355,3 @@ module Mongoid
     end
   end
 end
-
