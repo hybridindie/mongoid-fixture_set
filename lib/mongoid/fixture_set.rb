@@ -6,7 +6,7 @@ require 'mongoid/fixture_set/test_helper'
 
 module Mongoid
   class FixtureSet
-    @@cached_fixtures = Hash.new
+    @cached_fixtures = Hash.new
 
     cattr_accessor :all_loaded_fixtures
     self.all_loaded_fixtures = {}
@@ -18,26 +18,26 @@ module Mongoid
 
       def cached_fixtures(keys_to_fetch = nil)
         if keys_to_fetch
-          @@cached_fixtures.values_at(*keys_to_fetch)
+          @cached_fixtures.values_at(*keys_to_fetch)
         else
-          @@cached_fixtures.values
+          @cached_fixtures.values
         end
       end
 
       def reset_cache
-        @@cached_fixtures.clear
+        @cached_fixtures.clear
       end
 
       def cache_empty?
-        @@cached_fixtures.empty?
+        @cached_fixtures.empty?
       end
 
       def fixture_is_cached?(name)
-        @@cached_fixtures[name]
+        @cached_fixtures[name]
       end
 
       def cache_fixtures(fixtures_map)
-        @@cached_fixtures.update(fixtures_map)
+        @cached_fixtures.update(fixtures_map)
       end
 
       def default_fixture_model_name(fixture_set_name)
@@ -64,9 +64,9 @@ module Mongoid
         fixture_sets = files_to_read.map do |fs_name|
           klass = class_names[fs_name]
           fixtures_map[fs_name] = Mongoid::FixtureSet.new(
-              fs_name,
-              klass,
-              ::File.join(fixtures_directory, fs_name))
+            fs_name,
+            klass,
+            ::File.join(fixtures_directory, fs_name))
         end
 
         update_all_loaded_fixtures fixtures_map
@@ -74,17 +74,18 @@ module Mongoid
         fixture_sets.each do |fs|
           fs.collection_documents.each do |model, documents|
             model = class_names[model]
-            if model
-              documents.each do |attributes|
-                create_or_update_document(model, attributes)
-              end
+            next unless model
+
+            documents.each do |attributes|
+              create_or_update_document(model, attributes)
             end
+
           end
         end
 
         cache_fixtures(fixtures_map)
 
-        return cached_fixtures(fixture_set_names)
+        cached_fixtures(fixture_set_names)
       end
 
       def create_or_update_document(model, attributes)
@@ -99,15 +100,15 @@ module Mongoid
 
         keys = (attributes.keys + document.attributes.keys).uniq
         keys.each do |key|
-          if attributes[key].is_a?(Array) || document[key].is_a?(Array)
-            document[key] = Array(attributes[key]) + Array(document[key])
-          else
-            document[key] = attributes[key] || document[key]
-          end
+          document[key] = if attributes[key].is_a?(Array) || document[key].is_a?(Array)
+                            Array(attributes[key]) + Array(document[key])
+                          else
+                            attributes[key] || document[key]
+                          end
         end
         sanitize_new_embedded_documents(document)
         document.save(validate: false)
-        return document
+        document
       end
 
       def sanitize_new_embedded_documents(document, is_new = false)
@@ -160,7 +161,7 @@ module Mongoid
           document['__fixture_name'] = fixture_name
           document.save(validate: false)
         end
-        return document
+        document
       end
     end
 
@@ -177,9 +178,11 @@ module Mongoid
         @model_class = class_name.safe_constantize
       end
 
-      @class_name = @model_class.respond_to?(:name) ?
-                        @model_class.name :
-                        self.class.default_fixture_model_name(name)
+      @class_name = if @model_class.respond_to?(:name)
+                      @model_class.name
+                    else
+                      self.class.default_fixture_model_name(name)
+                    end
 
       @fixtures = read_fixture_files
     end
@@ -193,16 +196,17 @@ module Mongoid
       fixtures.delete('DEFAULTS')
 
       # track any join collection we need to insert later
-      documents = Hash.new
+      documents = {}
 
       documents[class_name] = fixtures.map do |label, fixture|
         unmarshall_fixture(label, fixture, model_class)
       end
 
-      return documents
+      documents
     end
 
     private
+
     def unmarshall_fixture(label, attributes, model_class)
       model_class = model_class.constantize if model_class.is_a? String
       attributes = attributes.to_hash
@@ -218,12 +222,12 @@ module Mongoid
 
       return attributes if model_class.nil?
 
-      if !attributes.has_key?('_id')
-        if label
-          document = self.class.find_or_create_document(model_class, label)
-        else
-          document = model_class.new
-        end
+      unless attributes.key?('_id')
+        document = if label
+                     self.class.find_or_create_document(model_class, label)
+                   else
+                     model_class.new
+                   end
         attributes['_id'] = document.id
       end
 
@@ -240,10 +244,10 @@ module Mongoid
         end
       end
 
-      return attributes
+      attributes
     end
 
-    def unmarshall_belongs_to(model_class, attributes, relation)
+    def unmarshall_belongs_to(_model_class, attributes, relation)
       value = attributes.delete(relation.name.to_s)
       return if value.nil?
 
@@ -275,11 +279,10 @@ module Mongoid
         if value.is_a? Hash
           document = relation.class_name.constantize.new
           if relation.polymorphic?
-            value[relation.foreign_key] = attributes['_id']
-            value[relation.type]        = model_class.name
-          else
-            value[relation.foreign_key] = attributes['_id']
+            value[relation.type] = model_class.name
           end
+          value[relation.foreign_key] = attributes['_id']
+
           value = unmarshall_fixture(nil, value, relation.class_name)
           self.class.update_document(document, value)
           next
@@ -287,19 +290,14 @@ module Mongoid
 
         document = self.class.find_or_create_document(relation.class_name, value)
         if relation.polymorphic?
-          self.class.update_document(document, {
-              relation.foreign_key => attributes['_id'],
-              relation.type        => model_class.name,
-          })
-        else
-          self.class.update_document(document, {
-              relation.foreign_key => attributes['_id']
-          })
+          self.class.update_document(document, relation.type => model_class.name)
         end
+        self.class.update_document(document, relation.foreign_key => attributes['_id'])
+
       end
     end
 
-    def unmarshall_has_and_belongs_to_many(model_class, attributes, relation)
+    def unmarshall_has_and_belongs_to_many(_model_class, attributes, relation)
       values = attributes.delete(relation.name.to_s)
       return if values.nil?
 
