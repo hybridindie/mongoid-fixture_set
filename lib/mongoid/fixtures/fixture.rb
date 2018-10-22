@@ -1,7 +1,7 @@
-require 'mongoid/fixture_set/errors'
+require 'mongoid/fixtures/errors'
 
 module Mongoid
-  class FixtureSet
+  class Fixtures
     class Fixture
       include Enumerable
 
@@ -27,13 +27,12 @@ module Mongoid
       alias :to_hash :fixture
 
       def find
-        if model_class
-          model_class.unscoped do
-            model_class.find_by('__fixture_name' => name)
-          end
-        else
-          raise FixtureClassNotFound, "No class attached to find."
+        raise FixtureClassNotFound, 'No class attached to find.' unless model_class
+
+        model_class.unscoped do
+          model_class.find_by('__fixture_name' => name)
         end
+
       end
     end
   end

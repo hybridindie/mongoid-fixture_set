@@ -11,7 +11,7 @@ If you'd like to contribute, but pull requests are welcome!
 ## Install
 
 ```ruby
-gem 'mongoid-fixture_set'
+gem 'mongoid-fixtures'
 ```
 
 ## How to use

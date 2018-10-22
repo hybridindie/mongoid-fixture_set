@@ -20,7 +20,7 @@ class ClassCache
   end
 
   def default_fixture_model(fs_name)
-    Mongoid::FixtureSet.default_fixture_model_name(fs_name)
+    Mongoid::Fixtures.default_fixture_model_name(fs_name)
   end
 end
 

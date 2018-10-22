@@ -1,4 +1,4 @@
-require 'mongoid/fixture_set'
+require 'mongoid/fixtures'
 
 module Mongoid
   module Document

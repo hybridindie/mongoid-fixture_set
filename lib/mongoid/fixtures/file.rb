@@ -2,11 +2,11 @@ require 'erb'
 require 'yaml'
 
 module Mongoid
-  class FixtureSet
+  class Fixtures
 
     class RenderContext
       def self.create_subclass
-        Class.new Mongoid::FixtureSet.context_class do
+        Class.new Mongoid::Fixtures.context_class do
           def get_binding
             binding()
           end
@@ -14,7 +14,7 @@ module Mongoid
       end
     end
 
-    class Mongoid::FixtureSet::File # :nodoc:
+    class Mongoid::Fixtures::File # :nodoc:
       include Enumerable
 
       def self.open(file)

@@ -1,11 +1,11 @@
-require 'mongoid/fixture_set/errors'
-require 'mongoid/fixture_set/fixture'
-require 'mongoid/fixture_set/file'
-require 'mongoid/fixture_set/class_cache'
-require 'mongoid/fixture_set/test_helper'
+require 'mongoid/fixtures/errors'
+require 'mongoid/fixtures/fixture'
+require 'mongoid/fixtures/file'
+require 'mongoid/fixtures/class_cache'
+require 'mongoid/fixtures/test_helper'
 
 module Mongoid
-  class FixtureSet
+  class Fixtures
     @cached_fixtures = Hash.new
 
     cattr_accessor :all_loaded_fixtures
@@ -63,7 +63,7 @@ module Mongoid
         fixtures_map = {}
         fixture_sets = files_to_read.map do |fs_name|
           klass = class_names[fs_name]
-          fixtures_map[fs_name] = Mongoid::FixtureSet.new(
+          fixtures_map[fs_name] = Mongoid::Fixtures.new(
             fs_name,
             klass,
             ::File.join(fixtures_directory, fs_name))
@@ -133,7 +133,7 @@ module Mongoid
             if is_new && document.attributes[name]
               value = document.attributes.delete(name)
               if value.is_a?(Hash)
-                raise Mongoid::FixtureSet::FixtureError.new "Unable to create nested document inside an embedded document"
+                raise Mongoid::Fixtures::FixtureError.new "Unable to create nested document inside an embedded document"
               end
               doc = find_or_create_document(relation.class_name, value)
               document.attributes[relation.foreign_key] = doc.id
@@ -253,7 +253,7 @@ module Mongoid
 
       if value.is_a? Hash
         if relation.polymorphic?
-          raise Mongoid::FixtureSet::FixtureError.new "Unable to create document from nested attributes in a polymorphic relation"
+          raise Mongoid::Fixtures::FixtureError.new "Unable to create document from nested attributes in a polymorphic relation"
         end
         document = relation.class_name.constantize.new
         value = unmarshall_fixture(nil, value, relation.class_name)
@@ -344,9 +344,9 @@ module Mongoid
       } + ["#{path}.yml"]
 
       yaml_files.each_with_object({}) do |file, fixtures|
-        Mongoid::FixtureSet::File.open(file) do |fh|
+        Mongoid::Fixtures::File.open(file) do |fh|
           fh.each do |fixture_name, row|
-            fixtures[fixture_name] = Mongoid::FixtureSet::Fixture.new(fixture_name, row, model_class)
+            fixtures[fixture_name] = Mongoid::Fixtures::Fixture.new(fixture_name, row, model_class)
           end
         end
       end

@@ -1,7 +1,7 @@
 require 'active_support/concern'
 
 module Mongoid
-  class FixtureSet
+  class Fixtures
     module TestHelper
       extend ActiveSupport::Concern
 
@@ -71,14 +71,14 @@ module Mongoid
           self.class.fixtures(self.class.fixture_set_names)
           @loaded_fixtures = self.class.cached_fixtures
         else
-          Mongoid::FixtureSet.reset_cache
+          Mongoid::Fixtures.reset_cache
           self.loaded_fixtures = load_fixtures
           self.class.cached_fixtures = @loaded_fixtures
         end
       end
 
       def teardown_fixtures
-        Mongoid::FixtureSet.reset_cache
+        Mongoid::Fixtures.reset_cache
       end
 
       private
@@ -89,7 +89,7 @@ module Mongoid
           self.class.fixtures(:all)
           fixture_set_names = self.class.fixture_set_names
         end
-        Mongoid::FixtureSet.create_fixtures(fixture_path, fixture_set_names)
+        Mongoid::Fixtures.create_fixtures(fixture_path, fixture_set_names)
       end
 
       def loaded_fixtures=(fixtures)
