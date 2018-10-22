@@ -66,7 +66,8 @@ module Mongoid
           fixtures_map[fs_name] = Mongoid::Fixtures.new(
             fs_name,
             klass,
-            ::File.join(fixtures_directory, fs_name))
+            ::File.join(fixtures_directory, fs_name)
+          )
         end
 
         update_all_loaded_fixtures fixtures_map
@@ -146,7 +147,7 @@ module Mongoid
         sanitize_new_embedded_documents(document, true)
         attributes.delete('_id')
         document.fields.select do |k, v|
-          k != '_id' && v.default_val != nil && attributes[k] == document[k]
+          k != '_id' && !v.default_val.nil? && attributes[k] == document[k]
         end.each do |k, v|
           attributes.delete(k)
         end
@@ -155,7 +156,7 @@ module Mongoid
       def find_or_create_document(model, fixture_name)
         model = model.constantize if model.is_a? String
 
-        document = model.where('__fixture_name' => fixture_name).first
+        document = model.unscoped.find_by('__fixture_name' => fixture_name)
         if document.nil?
           document = model.new
           document['__fixture_name'] = fixture_name
