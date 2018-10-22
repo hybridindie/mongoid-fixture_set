@@ -1,7 +1,7 @@
 require 'test_helper'
 
 class LoadOnceTest < BaseTest
-  include Mongoid::FixtureSet::TestHelper
+  include Mongoid::Fixtures::TestHelper
   self.fixture_path = 'test/load_once_fixtures'
   self.load_fixtures_once = true
 
@@ -13,7 +13,7 @@ class LoadOnceTest < BaseTest
       LoadOnceTest.count += 1
     end
   end
-  Mongoid::FixtureSet.context_class.send :include, FixtureLoadCount
+  Mongoid::Fixtures.context_class.send :include, FixtureLoadCount
 
   def teardown
   end

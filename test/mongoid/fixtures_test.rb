@@ -1,5 +1,5 @@
 class FixturesTest < BaseTest
-  include Mongoid::FixtureSet::TestHelper
+  include Mongoid::Fixtures::TestHelper
   self.fixture_path = 'test/fixtures'
 
   def test_should_access_fixtures
