@@ -52,7 +52,7 @@ module Mongoid
         unless Hash === data || YAML::Omap === data
           raise FormatError, 'fixture is not a hash'
         end
-        raise FormatError unless data.all? { |name, row| Hash === row }
+        raise FormatError unless data.all? { |_name, row| Hash === row }
         data
       end
     end

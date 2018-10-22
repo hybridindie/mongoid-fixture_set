@@ -82,6 +82,7 @@ module Mongoid
       end
 
       private
+
       def load_fixtures
         fixture_set_names = self.class.fixture_set_names
         if fixture_set_names.empty?

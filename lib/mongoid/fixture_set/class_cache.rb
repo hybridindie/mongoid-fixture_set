@@ -13,13 +13,10 @@ class ClassCache
   end
 
   private
+
   def insert_class(class_names, name, klass)
     # We only want to deal with Mongoid objects.
-    if klass && klass < Mongoid::Document
-      class_names[name] = klass
-    else
-      class_names[name] = nil
-    end
+    class_names[name] = klass if klass && klass < Mongoid::Document
   end
 
   def default_fixture_model(fs_name)

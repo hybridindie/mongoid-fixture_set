@@ -37,5 +37,4 @@ module Mongoid
       end
     end
   end
-end 
-
+end
