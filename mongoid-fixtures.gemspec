@@ -18,5 +18,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'mongoid',       '>= 7.0'
   s.add_dependency 'activesupport', '>= 5.0'
+
+  s.add_development_dependency 'database_cleaner'
 end
 
